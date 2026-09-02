@@ -62,10 +62,8 @@ om-sans-font/
 │   │   ├── OmSans-ExtraBold.otf
 │   │   └── OmSans-Black.otf
 │   └── woff2/                        # Static WOFF2 webfonts (all 9 weights)
-├── src/                              # Source code & parametric vector engine
-│   ├── glyphs_builder.py             # Glyph geometry models across all weights
-│   ├── path_utils.py                 # Vector spline utilities (TTF quad & CFF cubic)
-│   └── features.py                   # OpenType GPOS kerning tables
+├── src/                              # Base geometric font sources
+│   └── base_geom.ttf                 # Base variable geometric font master
 ├── build_fonts.py                    # Font compilation pipeline
 ├── validate_fonts.py                 # Automated OpenType table validation suite
 ├── requirements.txt                  # Python dependencies (fonttools, brotli)
@@ -85,8 +83,8 @@ om-sans-font/
 | **Ascender** | 750 | Subtle rise above cap height |
 | **Descender** | -250 | Deep enough for clear descenders ('g', 'j', 'p', 'q', 'y') |
 | **Typo Line Gap** | 100 | Comfortable default line spacing |
-| **Weight Axis** | 100 to 900 | Stem thickness scales from 24 (Thin) to 224 (Black) |
-| **Character Count** | 158 glyphs | Basic Latin, Latin-1 Supplement, figures, currency, punctuation |
+| **Weight Axis** | 100 to 900 | Full continuous range from Thin (100) to Black (900) |
+| **Character Count** | 416 glyphs | Full Latin Extended, diacritics, currency, punctuation, tabular figures |
 
 ---
 
