@@ -67,6 +67,20 @@ def safe_save(font_obj, out_path):
     return out_path
 
 
+def set_overlap_flags(font):
+    """
+    Set OVERLAP_SIMPLE flag (0x0040) on all simple TrueType glyphs.
+    Instructs DirectWrite and Windows GDI font engines to render contours
+    using the non-zero winding rule, preventing hollow wireframe glitches.
+    """
+    if 'glyf' in font:
+        glyf = font['glyf']
+        for name in font.getGlyphOrder():
+            g = glyf[name]
+            if g.numberOfContours > 0 and hasattr(g, 'flags'):
+                g.flags = [flag | 0x0040 for flag in g.flags]
+
+
 def build_single_ttf(weight, style_name, out_path, is_master=False):
     """Build a static TrueType (.ttf) font file."""
     glyphs_dict = build_all_glyphs(weight)
@@ -150,6 +164,8 @@ def build_single_ttf(weight, style_name, out_path, is_master=False):
     except Exception as e:
         print(f"  [Warning] Feature compilation note for {style_name}: {e}")
         
+    # Set OVERLAP_SIMPLE flag on all glyphs to ensure solid rendering in Windows GDI/DirectWrite
+    set_overlap_flags(fb.font)
     safe_save(fb, out_path)
     return out_path
 
@@ -295,6 +311,8 @@ def build_variable_font(master_paths, out_path):
     except Exception as e:
         print(f"  [Warning] Variable font feature compilation: {e}")
         
+    # Set OVERLAP_SIMPLE flag on all glyphs to ensure solid rendering in Windows GDI/DirectWrite
+    set_overlap_flags(vf)
     safe_save(vf, out_path)
     return out_path
 

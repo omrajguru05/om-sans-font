@@ -12,10 +12,6 @@ def get_metrics_for_weight(weight):
     Compute typographic dimensions for a given weight (100 to 900).
     UPM = 1000, CapHeight = 700, xHeight = 520, Ascender = 750, Descender = -200.
     """
-    # Stem thickness calibration:
-    # 100: 24 (Thin)
-    # 400: 84 (Regular)
-    # 900: 224 (Black)
     if weight <= 400:
         t = (weight - 100) / 300.0
         stem = 24.0 + t * (84.0 - 24.0)
@@ -23,7 +19,7 @@ def get_metrics_for_weight(weight):
         t = (weight - 400) / 500.0
         stem = 84.0 + t * (224.0 - 84.0)
         
-    stem_h = stem * 0.90 # horizontal stems slightly lighter for optical balance
+    stem_h = stem * 0.90
     overshoot = 12.0 + (stem - 24.0) * 0.05
     
     return {
@@ -38,7 +34,6 @@ def get_metrics_for_weight(weight):
         'lsb_cap': max(45.0, 75.0 - stem * 0.12),
         'lsb_low': max(40.0, 68.0 - stem * 0.12)
     }
-
 
 def build_all_glyphs(weight):
     """
@@ -55,7 +50,6 @@ def build_all_glyphs(weight):
     ov = m['ov']
     
     glyphs = {}
-
     def add_glyph(spec):
         glyphs[spec.name] = spec
         return spec
@@ -63,10 +57,14 @@ def build_all_glyphs(weight):
     # -------------------------------------------------------------
     # .notdef
     # -------------------------------------------------------------
-    p_notdef = Path()
     w_notdef = 500.0
+    p_notdef = Path()
     p_notdef.rect(60.0, 0.0, w_notdef - 120.0, cap_h)
-    p_notdef.rect(60.0 + stem, stem, w_notdef - 120.0 - 2*stem, cap_h - 2*stem)
+    p_notdef.move_to(60.0 + stem, stem)
+    p_notdef.line_to(w_notdef - 60.0 - stem, stem)
+    p_notdef.line_to(w_notdef - 60.0 - stem, cap_h - stem)
+    p_notdef.line_to(60.0 + stem, cap_h - stem)
+    p_notdef.close()
     add_glyph(GlyphSpec('.notdef', None, w_notdef, 60.0, [p_notdef]))
 
     # -------------------------------------------------------------
@@ -75,10 +73,10 @@ def build_all_glyphs(weight):
     w_space = 280.0 + stem * 0.2
     add_glyph(GlyphSpec('space', 0x0020, w_space, 0.0, [Path()]))
 
-    # -------------------------------------------------------------
+    # =============================================================
     # UPPERCASE A-Z
-    # -------------------------------------------------------------
-    
+    # =============================================================
+
     # --- A ---
     w_A = 680.0 + stem * 0.5
     lsb_A = 50.0
@@ -86,27 +84,21 @@ def build_all_glyphs(weight):
     cx_A = w_A / 2.0
     y_bar_top = 270.0
     y_bar_bot = y_bar_top - stem_h
-    
     p_A_out = Path()
-    # Outer contour
     p_A_out.move_to(lsb_A, 0.0)
     p_A_out.line_to(cx_A - stem * 0.3, cap_h)
     p_A_out.line_to(cx_A + stem * 0.3, cap_h)
     p_A_out.line_to(rsb_A, 0.0)
     p_A_out.line_to(rsb_A - stem * 1.1, 0.0)
-    # Right inner diagonal up to bar bottom
     t_r_bot = y_bar_bot / cap_h
     xr_bot = (rsb_A - stem * 1.1) + t_r_bot * (cx_A - (rsb_A - stem * 1.1))
     p_A_out.line_to(xr_bot, y_bar_bot)
-    # Crossbar bottom
     t_l_bot = y_bar_bot / cap_h
     xl_bot = (lsb_A + stem * 1.1) + t_l_bot * (cx_A - (lsb_A + stem * 1.1))
     p_A_out.line_to(xl_bot, y_bar_bot)
-    # Left inner diagonal down to baseline
     p_A_out.line_to(lsb_A + stem * 1.1, 0.0)
     p_A_out.close()
     
-    # Inner triangle counter
     t_l_top = y_bar_top / cap_h
     xl_top = (lsb_A + stem * 1.1) + t_l_top * (cx_A - (lsb_A + stem * 1.1))
     t_r_top = y_bar_top / cap_h
@@ -121,7 +113,7 @@ def build_all_glyphs(weight):
     # --- B ---
     w_B = 620.0 + stem * 0.4
     lsb_B = 80.0
-    waist_B = 360.0
+    waist_B = 350.0
     p_B_out = Path()
     p_B_out.move_to(lsb_B, 0.0)
     p_B_out.line_to(lsb_B, cap_h)
@@ -132,49 +124,38 @@ def build_all_glyphs(weight):
     p_B_out.line_to(lsb_B, 0.0)
     p_B_out.close()
     
-    # Top counter (counter-clockwise)
     p_B_top = Path()
-    p_B_top.move_to(lsb_B + stem, waist_B + stem_h*0.5)
-    p_B_top.line_to(lsb_B + stem, cap_h - stem_h)
-    p_B_top.line_to(w_B - 160.0, cap_h - stem_h)
-    p_B_top.arc_to(w_B - 160.0, (cap_h + waist_B)/2.0, max(10.0, 140.0 - lsb_B*0.4 - stem), (cap_h - waist_B)/2.0 - stem_h, 90, -90, clockwise=False, steps=4)
+    p_B_top.move_to(lsb_B + stem, cap_h - stem_h)
+    p_B_top.line_to(lsb_B + stem, waist_B + stem_h*0.5)
+    p_B_top.line_to(w_B - 140.0, waist_B + stem_h*0.5)
+    p_B_top.arc_to(w_B - 140.0, (cap_h + waist_B)/2.0, max(10.0, 140.0 - lsb_B*0.4 - stem), (cap_h - waist_B)/2.0 - stem_h, -90, 90, clockwise=False, steps=4)
     p_B_top.close()
     
-    # Bottom counter (counter-clockwise)
     p_B_bot = Path()
-    p_B_bot.move_to(lsb_B + stem, stem_h)
-    p_B_bot.line_to(lsb_B + stem, waist_B - stem_h*0.5)
-    p_B_bot.line_to(w_B - 140.0, waist_B - stem_h*0.5)
-    p_B_bot.arc_to(w_B - 140.0, waist_B/2.0, max(10.0, 150.0 - lsb_B*0.4 - stem), waist_B/2.0 - stem_h, 90, -90, clockwise=False, steps=4)
+    p_B_bot.move_to(lsb_B + stem, waist_B - stem_h*0.5)
+    p_B_bot.line_to(lsb_B + stem, stem_h)
+    p_B_bot.line_to(w_B - 120.0, stem_h)
+    p_B_bot.arc_to(w_B - 120.0, waist_B/2.0, max(10.0, 150.0 - lsb_B*0.4 - stem), waist_B/2.0 - stem_h, -90, 90, clockwise=False, steps=4)
     p_B_bot.close()
     add_glyph(GlyphSpec('B', 0x0042, w_B, lsb_B, [p_B_out, p_B_top, p_B_bot]))
 
-    # --- C (Pure Circular Arc, Clean Terminals) ---
+    # --- C ---
     w_C = 720.0 + stem * 0.4
-    cx_C = w_C / 2.0 + 10.0
+    cx_C = w_C / 2.0
     cy_C = cap_h / 2.0
-    rx_C = (w_C - 100.0) / 2.0
+    rx_C = (w_C - 80.0) / 2.0
     ry_C = (cap_h + 2*ov) / 2.0
-    ang_cut = 42.0
-    
+    rx_C_in = rx_C - stem
+    ry_C_in = ry_C - stem_h
+    a_top = 42.0
+    a_bot = 318.0
     p_C = Path()
-    # Outer arc from top terminal clockwise around back to bottom terminal
-    a_top = 90.0 - ang_cut
-    a_bot = 270.0 + ang_cut
-    x_out_top = cx_C + rx_C * math.cos(math.radians(a_top))
-    y_out_top = cy_C + ry_C * math.sin(math.radians(a_top))
-    p_C.move_to(x_out_top, y_out_top)
-    p_C.arc_to(cx_C, cy_C, rx_C, ry_C, a_top, a_bot, clockwise=True, steps=6)
-    
-    # Bottom flat terminal inward
-    x_in_bot = cx_C + (rx_C - stem) * math.cos(math.radians(a_bot))
-    y_in_bot = cy_C + (ry_C - stem_h) * math.sin(math.radians(a_bot))
-    p_C.line_to(x_in_bot, y_in_bot)
-    
-    # Inner arc counter-clockwise back to top terminal
-    p_C.arc_to(cx_C, cy_C, rx_C - stem, ry_C - stem_h, a_bot, a_top, clockwise=False, steps=6)
+    p_C.move_to(cx_C + rx_C * math.cos(math.radians(a_top)), cy_C + ry_C * math.sin(math.radians(a_top)))
+    p_C.arc_to(cx_C, cy_C, rx_C, ry_C, a_top, a_bot, clockwise=False, steps=6)
+    p_C.line_to(cx_C + rx_C_in * math.cos(math.radians(a_bot)), cy_C + ry_C_in * math.sin(math.radians(a_bot)))
+    p_C.arc_to(cx_C, cy_C, rx_C_in, ry_C_in, a_bot, a_top, clockwise=True, steps=6)
     p_C.close()
-    add_glyph(GlyphSpec('C', 0x0043, w_C, 60.0, [p_C]))
+    add_glyph(GlyphSpec('C', 0x0043, w_C, 50.0, [p_C]))
 
     # --- D ---
     w_D = 720.0 + stem * 0.4
@@ -188,10 +169,10 @@ def build_all_glyphs(weight):
     p_D_out.close()
     
     p_D_in = Path()
-    p_D_in.move_to(lsb_D + stem, stem_h)
-    p_D_in.line_to(lsb_D + stem, cap_h - stem_h)
-    p_D_in.line_to(w_D - 280.0, cap_h - stem_h)
-    p_D_in.arc_to(w_D - 280.0, cap_h/2.0, max(10.0, 240.0 - stem), cap_h/2.0 - stem_h, 90, -90, clockwise=False, steps=4)
+    p_D_in.move_to(lsb_D + stem, cap_h - stem_h)
+    p_D_in.line_to(lsb_D + stem, stem_h)
+    p_D_in.line_to(w_D - 280.0, stem_h)
+    p_D_in.arc_to(w_D - 280.0, cap_h/2.0, max(10.0, 240.0 - stem), cap_h/2.0 - stem_h, -90, 90, clockwise=False, steps=4)
     p_D_in.close()
     add_glyph(GlyphSpec('D', 0x0044, w_D, lsb_D, [p_D_out, p_D_in]))
 
@@ -215,7 +196,7 @@ def build_all_glyphs(weight):
     add_glyph(GlyphSpec('E', 0x0045, w_E, lsb_E, [p_E]))
 
     # --- F ---
-    w_F = 570.0 + stem * 0.3
+    w_F = 560.0 + stem * 0.3
     lsb_F = 80.0
     p_F = Path()
     p_F.move_to(lsb_F, 0.0)
@@ -224,53 +205,52 @@ def build_all_glyphs(weight):
     p_F.line_to(w_F - 50.0, cap_h - stem_h)
     p_F.line_to(lsb_F + stem, cap_h - stem_h)
     p_F.line_to(lsb_F + stem, 360.0 + stem_h/2.0)
-    p_F.line_to(w_F - 90.0, 360.0 + stem_h/2.0)
-    p_F.line_to(w_F - 90.0, 360.0 - stem_h/2.0)
+    p_F.line_to(w_F - 100.0, 360.0 + stem_h/2.0)
+    p_F.line_to(w_F - 100.0, 360.0 - stem_h/2.0)
     p_F.line_to(lsb_F + stem, 360.0 - stem_h/2.0)
     p_F.line_to(lsb_F + stem, 0.0)
     p_F.close()
     add_glyph(GlyphSpec('F', 0x0046, w_F, lsb_F, [p_F]))
 
-    # --- G (Clean Circular Sweep, Horizontal Inset Bar, No Spur) ---
+    # --- G ---
     w_G = 760.0 + stem * 0.4
-    cx_G = w_G / 2.0 + 10.0
+    cx_G = w_G / 2.0
     cy_G = cap_h / 2.0
-    rx_G = (w_G - 100.0) / 2.0
+    rx_G = (w_G - 80.0) / 2.0
     ry_G = (cap_h + 2*ov) / 2.0
-    y_bar_G = 330.0
-    
+    rx_G_in = rx_G - stem
+    ry_G_in = ry_G - stem_h
+    waist_G = 340.0
+    x_r_G = cx_G + rx_G * math.cos(math.radians(a_bot))
     p_G = Path()
-    # Outer arc starting at top terminal
-    x_out_top_G = cx_G + rx_G * math.cos(math.radians(a_top))
-    y_out_top_G = cy_G + ry_G * math.sin(math.radians(a_top))
-    p_G.move_to(x_out_top_G, y_out_top_G)
-    p_G.arc_to(cx_G, cy_G, rx_G, ry_G, a_top, 0, clockwise=True, steps=6)
-    # Straight up to crossbar
-    p_G.line_to(cx_G + rx_G, y_bar_G)
-    p_G.line_to(cx_G - 20.0, y_bar_G)
-    p_G.line_to(cx_G - 20.0, y_bar_G - stem_h)
-    p_G.line_to(cx_G + rx_G - stem, y_bar_G - stem_h)
-    # Inner arc counter-clockwise back to top terminal
-    p_G.arc_to(cx_G, cy_G, rx_G - stem, ry_G - stem_h, 0, a_top, clockwise=False, steps=6)
+    p_G.move_to(cx_G + rx_G * math.cos(math.radians(a_top)), cy_G + ry_G * math.sin(math.radians(a_top)))
+    p_G.arc_to(cx_G, cy_G, rx_G, ry_G, a_top, a_bot, clockwise=False, steps=6)
+    p_G.line_to(x_r_G, waist_G)
+    p_G.line_to(cx_G + 10.0, waist_G)
+    p_G.line_to(cx_G + 10.0, waist_G - stem_h)
+    p_G.line_to(x_r_G - stem, waist_G - stem_h)
+    p_G.line_to(cx_G + rx_G_in * math.cos(math.radians(a_bot)), cy_G + ry_G_in * math.sin(math.radians(a_bot)))
+    p_G.arc_to(cx_G, cy_G, rx_G_in, ry_G_in, a_bot, a_top, clockwise=True, steps=6)
     p_G.close()
-    add_glyph(GlyphSpec('G', 0x0047, w_G, 60.0, [p_G]))
+    add_glyph(GlyphSpec('G', 0x0047, w_G, 50.0, [p_G]))
 
     # --- H ---
     w_H = 720.0 + stem * 0.4
     lsb_H = 80.0
     rsb_H = w_H - 80.0
+    y_bar_H = 350.0
     p_H = Path()
     p_H.move_to(lsb_H, 0.0)
     p_H.line_to(lsb_H, cap_h)
     p_H.line_to(lsb_H + stem, cap_h)
-    p_H.line_to(lsb_H + stem, 350.0 + stem_h/2.0)
-    p_H.line_to(rsb_H - stem, 350.0 + stem_h/2.0)
+    p_H.line_to(lsb_H + stem, y_bar_H + stem_h/2.0)
+    p_H.line_to(rsb_H - stem, y_bar_H + stem_h/2.0)
     p_H.line_to(rsb_H - stem, cap_h)
     p_H.line_to(rsb_H, cap_h)
     p_H.line_to(rsb_H, 0.0)
     p_H.line_to(rsb_H - stem, 0.0)
-    p_H.line_to(rsb_H - stem, 350.0 - stem_h/2.0)
-    p_H.line_to(lsb_H + stem, 350.0 - stem_h/2.0)
+    p_H.line_to(rsb_H - stem, y_bar_H - stem_h/2.0)
+    p_H.line_to(lsb_H + stem, y_bar_H - stem_h/2.0)
     p_H.line_to(lsb_H + stem, 0.0)
     p_H.close()
     add_glyph(GlyphSpec('H', 0x0048, w_H, lsb_H, [p_H]))
@@ -283,41 +263,40 @@ def build_all_glyphs(weight):
     add_glyph(GlyphSpec('I', 0x0049, w_I, lsb_I, [p_I]))
 
     # --- J ---
-    w_J = 480.0 + stem * 0.3
-    lsb_J = 60.0
+    w_J = 440.0 + stem * 0.3
+    rsb_J = w_J - 60.0
+    cx_J = (rsb_J - stem + 60.0) / 2.0
     p_J = Path()
-    p_J.move_to(w_J - 80.0 - stem, cap_h)
-    p_J.line_to(w_J - 80.0, cap_h)
-    p_J.line_to(w_J - 80.0, 160.0)
-    p_J.arc_to(w_J - 80.0 - 140.0, 160.0, 140.0, 160.0 + ov, 0, -180, clockwise=True, steps=4)
-    p_J.line_to(lsb_J, 180.0)
-    p_J.line_to(lsb_J + stem, 180.0)
-    p_J.line_to(lsb_J + stem, 160.0)
-    p_J.arc_to(w_J - 80.0 - 140.0, 160.0, max(10.0, 140.0 - stem), 160.0 + ov - stem_h, 180, 0, clockwise=False, steps=4)
+    p_J.move_to(rsb_J - stem, cap_h)
+    p_J.line_to(rsb_J, cap_h)
+    p_J.line_to(rsb_J, 160.0)
+    p_J.arc_to(cx_J, 160.0, (rsb_J - 60.0)/2.0, 160.0 + ov, 0, -180, clockwise=True, steps=4)
+    p_J.line_to(60.0, 180.0)
+    p_J.line_to(60.0 + stem, 180.0)
+    p_J.arc_to(cx_J, 160.0, max(10.0, (rsb_J - 60.0)/2.0 - stem), max(10.0, 160.0 + ov - stem_h), -180, 0, clockwise=False, steps=4)
+    p_J.line_to(rsb_J - stem, cap_h)
     p_J.close()
-    add_glyph(GlyphSpec('J', 0x004A, w_J, lsb_J, [p_J]))
+    add_glyph(GlyphSpec('J', 0x004A, w_J, 60.0, [p_J]))
 
     # --- K ---
-    w_K = 650.0 + stem * 0.4
+    w_K = 660.0 + stem * 0.4
     lsb_K = 80.0
-    p_K = Path()
-    p_K.move_to(lsb_K, 0.0)
-    p_K.line_to(lsb_K, cap_h)
-    p_K.line_to(lsb_K + stem, cap_h)
-    # To diagonal junction
-    p_K.line_to(lsb_K + stem, 390.0)
-    p_K.line_to(w_K - 100.0, cap_h)
-    p_K.line_to(w_K - 100.0 + stem*1.1, cap_h)
-    p_K.line_to(lsb_K + stem + 60.0, 310.0)
-    p_K.line_to(w_K - 70.0 + stem*1.1, 0.0)
-    p_K.line_to(w_K - 70.0, 0.0)
-    p_K.line_to(lsb_K + stem, 250.0)
-    p_K.line_to(lsb_K + stem, 0.0)
-    p_K.close()
-    add_glyph(GlyphSpec('K', 0x004B, w_K, lsb_K, [p_K]))
+    rsb_K = w_K - 50.0
+    p_K_stem = Path()
+    p_K_stem.rect(lsb_K, 0.0, stem, cap_h)
+    p_K_diag = Path()
+    p_K_diag.move_to(lsb_K + stem, 220.0)
+    p_K_diag.line_to(rsb_K - stem*0.9, cap_h)
+    p_K_diag.line_to(rsb_K, cap_h)
+    p_K_diag.line_to(lsb_K + stem*1.8, 310.0)
+    p_K_diag.line_to(rsb_K, 0.0)
+    p_K_diag.line_to(rsb_K - stem*1.1, 0.0)
+    p_K_diag.line_to(lsb_K + stem, 250.0)
+    p_K_diag.close()
+    add_glyph(GlyphSpec('K', 0x004B, w_K, lsb_K, [p_K_stem, p_K_diag]))
 
     # --- L ---
-    w_L = 520.0 + stem * 0.3
+    w_L = 540.0 + stem * 0.3
     lsb_L = 80.0
     p_L = Path()
     p_L.move_to(lsb_L, 0.0)
@@ -329,22 +308,21 @@ def build_all_glyphs(weight):
     p_L.close()
     add_glyph(GlyphSpec('L', 0x004C, w_L, lsb_L, [p_L]))
 
-    # --- M (Geometric modern: Verticals + Diagonals touching baseline) ---
-    w_M = 820.0 + stem * 0.5
+    # --- M ---
+    w_M = 860.0 + stem * 0.5
     lsb_M = 70.0
     rsb_M = w_M - 70.0
-    cx_M = w_M / 2.0
     p_M = Path()
     p_M.move_to(lsb_M, 0.0)
     p_M.line_to(lsb_M, cap_h)
     p_M.line_to(lsb_M + stem*0.9, cap_h)
-    p_M.line_to(cx_M, 160.0)
+    p_M.line_to(w_M / 2.0, 160.0)
     p_M.line_to(rsb_M - stem*0.9, cap_h)
     p_M.line_to(rsb_M, cap_h)
     p_M.line_to(rsb_M, 0.0)
     p_M.line_to(rsb_M - stem, 0.0)
     p_M.line_to(rsb_M - stem, cap_h - 180.0)
-    p_M.line_to(cx_M, 40.0)
+    p_M.line_to(w_M / 2.0, 40.0)
     p_M.line_to(lsb_M + stem, cap_h - 180.0)
     p_M.line_to(lsb_M + stem, 0.0)
     p_M.close()
@@ -368,15 +346,15 @@ def build_all_glyphs(weight):
     p_N.close()
     add_glyph(GlyphSpec('N', 0x004E, w_N, lsb_N, [p_N]))
 
-    # --- O (Pure Geometric Circle) ---
+    # --- O ---
     w_O = 780.0 + stem * 0.4
     cx_O = w_O / 2.0
     cy_O = cap_h / 2.0
-    rx_O = (w_O - 90.0) / 2.0
+    rx_O = (w_O - 80.0) / 2.0
     ry_O = (cap_h + 2*ov) / 2.0
     p_O = Path()
     p_O.donut(cx_O, cy_O, rx_O, ry_O, max(10.0, rx_O - stem), max(10.0, ry_O - stem_h))
-    add_glyph(GlyphSpec('O', 0x004F, w_O, 45.0, [p_O]))
+    add_glyph(GlyphSpec('O', 0x004F, w_O, 40.0, [p_O]))
 
     # --- P ---
     w_P = 620.0 + stem * 0.3
@@ -385,74 +363,69 @@ def build_all_glyphs(weight):
     p_P_out = Path()
     p_P_out.move_to(lsb_P, 0.0)
     p_P_out.line_to(lsb_P, cap_h)
-    p_P_out.line_to(w_P - 180.0, cap_h)
-    p_P_out.arc_to(w_P - 180.0, (cap_h + y_mid_P)/2.0, 140.0, (cap_h - y_mid_P)/2.0, 90, -90, clockwise=True, steps=4)
+    p_P_out.line_to(w_P - 160.0, cap_h)
+    p_P_out.arc_to(w_P - 160.0, (cap_h + y_mid_P)/2.0, 140.0, (cap_h - y_mid_P)/2.0, 90, -90, clockwise=True, steps=4)
     p_P_out.line_to(lsb_P + stem, y_mid_P)
     p_P_out.line_to(lsb_P + stem, 0.0)
     p_P_out.close()
     
     p_P_in = Path()
-    p_P_in.move_to(lsb_P + stem, y_mid_P + stem_h)
-    p_P_in.line_to(lsb_P + stem, cap_h - stem_h)
-    p_P_in.line_to(w_P - 180.0, cap_h - stem_h)
-    p_P_in.arc_to(w_P - 180.0, (cap_h + y_mid_P)/2.0, max(10.0, 140.0 - stem), (cap_h - y_mid_P)/2.0 - stem_h, 90, -90, clockwise=False, steps=4)
+    p_P_in.move_to(lsb_P + stem, cap_h - stem_h)
+    p_P_in.line_to(lsb_P + stem, y_mid_P + stem_h)
+    p_P_in.line_to(w_P - 160.0, y_mid_P + stem_h)
+    p_P_in.arc_to(w_P - 160.0, (cap_h + y_mid_P)/2.0, max(10.0, 140.0 - stem), (cap_h - y_mid_P)/2.0 - stem_h, -90, 90, clockwise=False, steps=4)
     p_P_in.close()
     add_glyph(GlyphSpec('P', 0x0050, w_P, lsb_P, [p_P_out, p_P_in]))
 
-    # --- Q (Circular O with sleek diagonal tail) ---
+    # --- Q ---
     w_Q = w_O
-    p_Q_bowl = Path()
-    p_Q_bowl.donut(cx_O, cy_O, rx_O, ry_O, max(10.0, rx_O - stem), max(10.0, ry_O - stem_h))
+    p_Q = Path()
+    p_Q.donut(cx_O, cy_O, rx_O, ry_O, max(10.0, rx_O - stem), max(10.0, ry_O - stem_h))
     p_Q_tail = Path()
-    # Sleek diagonal tail
-    tail_x0 = cx_O + 60.0
-    tail_y0 = 120.0
-    tail_x1 = w_Q - 20.0
-    tail_y1 = -60.0
-    p_Q_tail.move_to(tail_x0, tail_y0)
-    p_Q_tail.line_to(tail_x0 + stem, tail_y0)
-    p_Q_tail.line_to(tail_x1, tail_y1)
-    p_Q_tail.line_to(tail_x1 - stem*1.2, tail_y1)
+    p_Q_tail.move_to(cx_O + 60.0, 120.0)
+    p_Q_tail.line_to(w_Q - 40.0, -60.0)
+    p_Q_tail.line_to(w_Q - 40.0 - stem*1.1, -60.0)
+    p_Q_tail.line_to(cx_O + 60.0 - stem, 120.0)
     p_Q_tail.close()
-    add_glyph(GlyphSpec('Q', 0x0051, w_Q, 45.0, [p_Q_bowl, p_Q_tail]))
+    add_glyph(GlyphSpec('Q', 0x0051, w_Q, 40.0, [p_Q, p_Q_tail]))
 
     # --- R ---
-    w_R = 650.0 + stem * 0.4
+    w_R = 640.0 + stem * 0.4
     lsb_R = 80.0
+    rsb_R = w_R - 50.0
+    y_mid_R = 290.0
     p_R_out = Path()
     p_R_out.move_to(lsb_R, 0.0)
     p_R_out.line_to(lsb_R, cap_h)
-    p_R_out.line_to(w_R - 180.0, cap_h)
-    p_R_out.arc_to(w_R - 180.0, (cap_h + y_mid_P)/2.0, 140.0, (cap_h - y_mid_P)/2.0, 90, -90, clockwise=True, steps=4)
-    p_R_out.line_to(lsb_R + stem + 20.0, y_mid_P)
-    p_R_out.line_to(w_R - 80.0, 0.0)
-    p_R_out.line_to(w_R - 80.0 - stem*1.1, 0.0)
-    p_R_out.line_to(lsb_R + stem, y_mid_P)
+    p_R_out.line_to(w_R - 160.0, cap_h)
+    p_R_out.arc_to(w_R - 160.0, (cap_h + y_mid_R)/2.0, 140.0, (cap_h - y_mid_R)/2.0, 90, -90, clockwise=True, steps=4)
+    p_R_out.line_to(lsb_R + stem*1.4, y_mid_R)
+    p_R_out.line_to(rsb_R, 0.0)
+    p_R_out.line_to(rsb_R - stem*1.2, 0.0)
+    p_R_out.line_to(lsb_R + stem, y_mid_R)
     p_R_out.line_to(lsb_R + stem, 0.0)
     p_R_out.close()
     
     p_R_in = Path()
-    p_R_in.move_to(lsb_R + stem, y_mid_P + stem_h)
-    p_R_in.line_to(lsb_R + stem, cap_h - stem_h)
-    p_R_in.line_to(w_R - 180.0, cap_h - stem_h)
-    p_R_in.arc_to(w_R - 180.0, (cap_h + y_mid_P)/2.0, max(10.0, 140.0 - stem), (cap_h - y_mid_P)/2.0 - stem_h, 90, -90, clockwise=False, steps=4)
+    p_R_in.move_to(lsb_R + stem, cap_h - stem_h)
+    p_R_in.line_to(lsb_R + stem, y_mid_R + stem_h)
+    p_R_in.line_to(w_R - 160.0, y_mid_R + stem_h)
+    p_R_in.arc_to(w_R - 160.0, (cap_h + y_mid_R)/2.0, max(10.0, 140.0 - stem), (cap_h - y_mid_R)/2.0 - stem_h, -90, 90, clockwise=False, steps=4)
     p_R_in.close()
     add_glyph(GlyphSpec('R', 0x0052, w_R, lsb_R, [p_R_out, p_R_in]))
 
-    # --- S (Geometric Modern S with open terminals) ---
+    # --- S ---
     w_S = 600.0 + stem * 0.3
-    lsb_S = 70.0
-    rsb_S = w_S - 70.0
+    lsb_S = 60.0
+    rsb_S = w_S - 60.0
     cx_S = w_S / 2.0
     p_S = Path()
-    # Outer continuous ribbon
-    p_S.move_to(rsb_S - 30.0, cap_h - 130.0)
-    p_S.arc_to(cx_S, cap_h - 170.0, (w_S - 140.0)/2.0, 170.0 + ov, 30, 180, clockwise=False, steps=4)
-    p_S.arc_to(cx_S, 170.0, (w_S - 140.0)/2.0, 170.0 + ov, 0, -150, clockwise=True, steps=4)
-    p_S.line_to(lsb_S + 30.0, 130.0)
-    # Inner sweep
-    p_S.arc_to(cx_S, 170.0, max(10.0, (w_S - 140.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), -150, 0, clockwise=False, steps=4)
-    p_S.arc_to(cx_S, cap_h - 170.0, max(10.0, (w_S - 140.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), 180, 30, clockwise=True, steps=4)
+    p_S.move_to(rsb_S - 20.0, cap_h - 130.0)
+    p_S.arc_to(cx_S, cap_h - 170.0, (w_S - 120.0)/2.0, 170.0 + ov, 35, 180, clockwise=False, steps=4)
+    p_S.arc_to(cx_S, 170.0, (w_S - 120.0)/2.0, 170.0 + ov, 0, -145, clockwise=True, steps=4)
+    p_S.line_to(lsb_S + 20.0, 120.0)
+    p_S.arc_to(cx_S, 170.0, max(10.0, (w_S - 120.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), -145, 0, clockwise=False, steps=4)
+    p_S.arc_to(cx_S, cap_h - 170.0, max(10.0, (w_S - 120.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), 180, 35, clockwise=True, steps=4)
     p_S.close()
     add_glyph(GlyphSpec('S', 0x0053, w_S, lsb_S, [p_S]))
 
@@ -476,16 +449,16 @@ def build_all_glyphs(weight):
     lsb_U = 80.0
     rsb_U = w_U - 80.0
     cx_U = w_U / 2.0
+    cy_U = 220.0
     p_U = Path()
     p_U.move_to(lsb_U, cap_h)
-    p_U.line_to(lsb_U + stem, cap_h)
-    p_U.line_to(lsb_U + stem, 220.0)
-    p_U.arc_to(cx_U, 220.0, max(10.0, (w_U - 160.0)/2.0 - stem), max(10.0, 220.0 + ov - stem_h), 180, 0, clockwise=True, steps=4)
-    p_U.line_to(rsb_U - stem, cap_h)
+    p_U.line_to(lsb_U, cy_U)
+    p_U.arc_to(cx_U, cy_U, (rsb_U - lsb_U)/2.0, cy_U + ov, 180, 0, clockwise=False, steps=4)
     p_U.line_to(rsb_U, cap_h)
-    p_U.line_to(rsb_U, 220.0)
-    p_U.arc_to(cx_U, 220.0, (w_U - 160.0)/2.0, 220.0 + ov, 0, -180, clockwise=True, steps=4)
-    p_U.line_to(lsb_U, cap_h)
+    p_U.line_to(rsb_U - stem, cap_h)
+    p_U.line_to(rsb_U - stem, cy_U)
+    p_U.arc_to(cx_U, cy_U, max(10.0, (rsb_U - lsb_U)/2.0 - stem), max(10.0, cy_U + ov - stem_h), 0, -180, clockwise=True, steps=4)
+    p_U.line_to(lsb_U + stem, cap_h)
     p_U.close()
     add_glyph(GlyphSpec('U', 0x0055, w_U, lsb_U, [p_U]))
 
@@ -496,12 +469,11 @@ def build_all_glyphs(weight):
     cx_V = w_V / 2.0
     p_V = Path()
     p_V.move_to(lsb_V, cap_h)
-    p_V.line_to(lsb_V + stem*1.1, cap_h)
-    p_V.line_to(cx_V, stem_h*0.8)
-    p_V.line_to(rsb_V - stem*1.1, cap_h)
+    p_V.line_to(cx_V, 0.0)
     p_V.line_to(rsb_V, cap_h)
-    p_V.line_to(cx_V + stem*0.3, 0.0)
-    p_V.line_to(cx_V - stem*0.3, 0.0)
+    p_V.line_to(rsb_V - stem*1.1, cap_h)
+    p_V.line_to(cx_V, stem_h*1.2)
+    p_V.line_to(lsb_V + stem*1.1, cap_h)
     p_V.close()
     add_glyph(GlyphSpec('V', 0x0056, w_V, lsb_V, [p_V]))
 
@@ -509,19 +481,18 @@ def build_all_glyphs(weight):
     w_W = 960.0 + stem * 0.6
     lsb_W = 40.0
     rsb_W = w_W - 40.0
+    cx_W = w_W / 2.0
     p_W = Path()
     p_W.move_to(lsb_W, cap_h)
-    p_W.line_to(lsb_W + stem*0.9, cap_h)
-    p_W.line_to(lsb_W + 200.0, 0.0)
-    p_W.line_to(lsb_W + 200.0 + stem*0.8, 0.0)
-    p_W.line_to(w_W / 2.0, cap_h - 160.0)
-    p_W.line_to(rsb_W - 200.0 - stem*0.8, 0.0)
-    p_W.line_to(rsb_W - 200.0, 0.0)
-    p_W.line_to(rsb_W - stem*0.9, cap_h)
+    p_W.line_to(lsb_W + 180.0, 0.0)
+    p_W.line_to(cx_W, cap_h - 160.0)
+    p_W.line_to(rsb_W - 180.0, 0.0)
     p_W.line_to(rsb_W, cap_h)
-    p_W.line_to(rsb_W - 190.0, 0.0)
-    p_W.line_to(w_W / 2.0, cap_h - 220.0)
-    p_W.line_to(lsb_W + 190.0, 0.0)
+    p_W.line_to(rsb_W - stem*0.9, cap_h)
+    p_W.line_to(rsb_W - 180.0, stem_h*1.5)
+    p_W.line_to(cx_W, cap_h - 40.0)
+    p_W.line_to(lsb_W + 180.0, stem_h*1.5)
+    p_W.line_to(lsb_W + stem*0.9, cap_h)
     p_W.close()
     add_glyph(GlyphSpec('W', 0x0057, w_W, lsb_W, [p_W]))
 
@@ -529,19 +500,19 @@ def build_all_glyphs(weight):
     w_X = 640.0 + stem * 0.4
     lsb_X = 50.0
     rsb_X = w_X - 50.0
-    p_X = Path()
-    p_X.move_to(lsb_X, cap_h)
-    p_X.line_to(lsb_X + stem*1.1, cap_h)
-    p_X.line_to(rsb_X, 0.0)
-    p_X.line_to(rsb_X - stem*1.1, 0.0)
-    p_X.close()
+    p_X1 = Path()
+    p_X1.move_to(lsb_X, cap_h)
+    p_X1.line_to(lsb_X + stem*1.1, cap_h)
+    p_X1.line_to(rsb_X, 0.0)
+    p_X1.line_to(rsb_X - stem*1.1, 0.0)
+    p_X1.close()
     p_X2 = Path()
     p_X2.move_to(rsb_X - stem*1.1, cap_h)
     p_X2.line_to(rsb_X, cap_h)
     p_X2.line_to(lsb_X + stem*1.1, 0.0)
     p_X2.line_to(lsb_X, 0.0)
     p_X2.close()
-    add_glyph(GlyphSpec('X', 0x0058, w_X, lsb_X, [p_X, p_X2]))
+    add_glyph(GlyphSpec('X', 0x0058, w_X, lsb_X, [p_X1, p_X2]))
 
     # --- Y ---
     w_Y = 640.0 + stem * 0.4
@@ -550,14 +521,14 @@ def build_all_glyphs(weight):
     cx_Y = w_Y / 2.0
     p_Y = Path()
     p_Y.move_to(lsb_Y, cap_h)
-    p_Y.line_to(lsb_Y + stem*1.1, cap_h)
-    p_Y.line_to(cx_Y, 300.0)
-    p_Y.line_to(cx_Y, 0.0)
-    p_Y.line_to(cx_Y + stem, 0.0)
-    p_Y.line_to(cx_Y + stem, 300.0)
+    p_Y.line_to(cx_Y - stem/2.0, 300.0)
+    p_Y.line_to(cx_Y - stem/2.0, 0.0)
+    p_Y.line_to(cx_Y + stem/2.0, 0.0)
+    p_Y.line_to(cx_Y + stem/2.0, 300.0)
     p_Y.line_to(rsb_Y, cap_h)
     p_Y.line_to(rsb_Y - stem*1.1, cap_h)
-    p_Y.line_to(cx_Y + stem/2.0, 320.0)
+    p_Y.line_to(cx_Y, 340.0)
+    p_Y.line_to(lsb_Y + stem*1.1, cap_h)
     p_Y.close()
     add_glyph(GlyphSpec('Y', 0x0059, w_Y, lsb_Y, [p_Y]))
 
@@ -579,144 +550,133 @@ def build_all_glyphs(weight):
     p_Z.close()
     add_glyph(GlyphSpec('Z', 0x005A, w_Z, lsb_Z, [p_Z]))
 
-    # -------------------------------------------------------------
+    # =============================================================
     # LOWERCASE a-z
-    # -------------------------------------------------------------
+    # =============================================================
 
-    # --- a (Single-Story Circular Bowl with Right Vertical Stem) ---
+    # --- a ---
     w_a = 600.0 + stem * 0.4
-    rsb_a = w_a - 60.0
-    cx_a = (rsb_a - stem) / 2.0 + 30.0
+    rsb_a = w_a - 50.0
+    cx_a = (rsb_a - stem) / 2.0 + 25.0
     cy_a = x_h / 2.0
-    rx_a = (rsb_a - stem - 40.0) / 2.0
+    rx_a = (rsb_a - stem - 10.0) / 2.0
     ry_a = (x_h + 2*ov) / 2.0
-    
-    p_a_stem = Path()
-    # Right vertical stem with circular bowl merge
-    p_a_stem.move_to(rsb_a - stem, 0.0)
-    p_a_stem.line_to(rsb_a, 0.0)
-    p_a_stem.line_to(rsb_a, x_h)
-    p_a_stem.line_to(rsb_a - stem, x_h)
-    p_a_stem.close()
-    
-    p_a_bowl = Path()
-    p_a_bowl.donut(cx_a, cy_a, rx_a, ry_a, max(10.0, rx_a - stem), max(10.0, ry_a - stem_h))
-    add_glyph(GlyphSpec('a', 0x0061, w_a, 50.0, [p_a_bowl, p_a_stem]))
+    p_a_out = Path()
+    p_a_out.move_to(rsb_a, x_h)
+    p_a_out.line_to(rsb_a - stem, x_h)
+    p_a_out.arc_to(cx_a, cy_a, rx_a, ry_a, 0, 360, clockwise=True, steps=8)
+    p_a_out.line_to(rsb_a - stem, 0.0)
+    p_a_out.line_to(rsb_a, 0.0)
+    p_a_out.close()
+    p_a_in = Path()
+    p_a_in.circle(cx_a, cy_a, max(10.0, rx_a - stem), clockwise=False)
+    add_glyph(GlyphSpec('a', 0x0061, w_a, 50.0, [p_a_out, p_a_in]))
 
     # --- b ---
     w_b = 620.0 + stem * 0.4
     lsb_b = 60.0
-    cx_b = (w_b + lsb_b + stem) / 2.0 - 20.0
-    cy_b = x_h / 2.0
-    rx_b = (w_b - lsb_b - stem - 30.0) / 2.0
-    ry_b = (x_h + 2*ov) / 2.0
-    
     p_b_stem = Path()
     p_b_stem.rect(lsb_b, 0.0, stem, asc)
+    cx_b = (w_b + lsb_b + stem) / 2.0 - 15.0
+    cy_b = x_h / 2.0
+    rx_b = (w_b - (lsb_b + stem) - 10.0) / 2.0
+    ry_b = (x_h + 2*ov) / 2.0
     p_b_bowl = Path()
     p_b_bowl.donut(cx_b, cy_b, rx_b, ry_b, max(10.0, rx_b - stem), max(10.0, ry_b - stem_h))
     add_glyph(GlyphSpec('b', 0x0062, w_b, lsb_b, [p_b_stem, p_b_bowl]))
 
-    # --- c (Circular arc with open aperture) ---
+    # --- c ---
     w_c = 540.0 + stem * 0.3
-    cx_c = w_c / 2.0 + 5.0
+    cx_c = w_c / 2.0
     cy_c = x_h / 2.0
-    rx_c = (w_c - 80.0) / 2.0
+    rx_c = (w_c - 70.0) / 2.0
     ry_c = (x_h + 2*ov) / 2.0
-    a_c = 44.0
-    
+    rx_c_in = rx_c - stem
+    ry_c_in = ry_c - stem_h
+    a_top_c = 44.0
+    a_bot_c = 316.0
     p_c = Path()
-    x_c_top = cx_c + rx_c * math.cos(math.radians(90.0 - a_c))
-    y_c_top = cy_c + ry_c * math.sin(math.radians(90.0 - a_c))
-    p_c.move_to(x_c_top, y_c_top)
-    p_c.arc_to(cx_c, cy_c, rx_c, ry_c, 90.0 - a_c, 270.0 + a_c, clockwise=True, steps=6)
-    x_c_bot_in = cx_c + (rx_c - stem) * math.cos(math.radians(270.0 + a_c))
-    y_c_bot_in = cy_c + (ry_c - stem_h) * math.sin(math.radians(270.0 + a_c))
-    p_c.line_to(x_c_bot_in, y_c_bot_in)
-    p_c.arc_to(cx_c, cy_c, rx_c - stem, ry_c - stem_h, 270.0 + a_c, 90.0 - a_c, clockwise=False, steps=6)
+    p_c.move_to(cx_c + rx_c * math.cos(math.radians(a_top_c)), cy_c + ry_c * math.sin(math.radians(a_top_c)))
+    p_c.arc_to(cx_c, cy_c, rx_c, ry_c, a_top_c, a_bot_c, clockwise=False, steps=6)
+    p_c.line_to(cx_c + rx_c_in * math.cos(math.radians(a_bot_c)), cy_c + ry_c_in * math.sin(math.radians(a_bot_c)))
+    p_c.arc_to(cx_c, cy_c, rx_c_in, ry_c_in, a_bot_c, a_top_c, clockwise=True, steps=6)
     p_c.close()
     add_glyph(GlyphSpec('c', 0x0063, w_c, 50.0, [p_c]))
 
     # --- d ---
     w_d = 620.0 + stem * 0.4
     rsb_d = w_d - 60.0
-    cx_d = (rsb_d - stem + 50.0) / 2.0
-    cy_d = x_h / 2.0
-    rx_d = (rsb_d - stem - 50.0) / 2.0
-    ry_d = (x_h + 2*ov) / 2.0
-    
     p_d_stem = Path()
     p_d_stem.rect(rsb_d - stem, 0.0, stem, asc)
+    cx_d = (rsb_d - stem + 50.0) / 2.0
+    cy_d = x_h / 2.0
+    rx_d = (rsb_d - stem - 30.0) / 2.0
+    ry_d = (x_h + 2*ov) / 2.0
     p_d_bowl = Path()
     p_d_bowl.donut(cx_d, cy_d, rx_d, ry_d, max(10.0, rx_d - stem), max(10.0, ry_d - stem_h))
-    add_glyph(GlyphSpec('d', 0x0064, w_d, 50.0, [p_d_bowl, p_d_stem]))
+    add_glyph(GlyphSpec('d', 0x0064, w_d, 50.0, [p_d_stem, p_d_bowl]))
 
-    # --- e (Horizontal Crossbar, Circular Upper Bowl, Open Lower Curve) ---
+    # --- e ---
     w_e = 580.0 + stem * 0.35
     cx_e = w_e / 2.0
     cy_e = x_h / 2.0
-    rx_e = (w_e - 80.0) / 2.0
+    rx_e = (w_e - 70.0) / 2.0
     ry_e = (x_h + 2*ov) / 2.0
-    y_bar_e = 260.0
-    
+    rx_e_in = rx_e - stem
+    ry_e_in = ry_e - stem_h
+    y_bar_e = cy_e + 10.0
+    a_bot_e = 320.0
     p_e_out = Path()
-    # Outer curve starting from bar right end, curving over top to bottom terminal
     p_e_out.move_to(cx_e + rx_e, y_bar_e)
-    p_e_out.arc_to(cx_e, cy_e, rx_e, ry_e, 0, 310, clockwise=False, steps=6)
-    # Bottom terminal flat inward
-    x_e_bot_in = cx_e + (rx_e - stem) * math.cos(math.radians(310.0))
-    y_e_bot_in = cy_e + (ry_e - stem_h) * math.sin(math.radians(310.0))
-    p_e_out.line_to(x_e_bot_in, y_e_bot_in)
-    # Inner lower curve back to bar
-    p_e_out.arc_to(cx_e, cy_e, rx_e - stem, ry_e - stem_h, 310.0, 180.0, clockwise=True, steps=4)
+    p_e_out.arc_to(cx_e, cy_e, rx_e, ry_e, 0, a_bot_e, clockwise=False, steps=6)
+    p_e_out.line_to(cx_e + rx_e_in * math.cos(math.radians(a_bot_e)), cy_e + ry_e_in * math.sin(math.radians(a_bot_e)))
+    p_e_out.arc_to(cx_e, cy_e, rx_e_in, ry_e_in, a_bot_e, 180, clockwise=True, steps=4)
     p_e_out.line_to(cx_e + rx_e, y_bar_e - stem_h)
+    p_e_out.line_to(cx_e + rx_e, y_bar_e)
     p_e_out.close()
     
-    # Top eye counter
     p_e_eye = Path()
-    p_e_eye.move_to(cx_e - rx_e + stem, y_bar_e)
-    p_e_eye.arc_to(cx_e, cy_e, max(10.0, rx_e - stem), max(10.0, ry_e - stem_h), 180, 0, clockwise=False, steps=4)
-    p_e_eye.line_to(cx_e - rx_e + stem, y_bar_e)
+    p_e_eye.move_to(cx_e + rx_e_in, y_bar_e)
+    p_e_eye.line_to(cx_e - rx_e_in, y_bar_e)
+    p_e_eye.arc_to(cx_e, cy_e, rx_e_in, ry_e_in, 180, 0, clockwise=True, steps=4)
     p_e_eye.close()
     add_glyph(GlyphSpec('e', 0x0065, w_e, 50.0, [p_e_out, p_e_eye]))
 
     # --- f ---
     w_f = 350.0 + stem * 0.3
-    cx_f = 120.0
+    cx_f = 110.0
     p_f = Path()
     p_f.move_to(cx_f, 0.0)
+    p_f.line_to(cx_f, asc - 140.0)
+    p_f.arc_to(cx_f + 70.0, asc - 140.0, 70.0, 140.0, 180, 40, clockwise=True, steps=3)
+    p_f.line_to(cx_f + 70.0 + stem, asc - 140.0 + 90.0)
+    p_f.arc_to(cx_f + 70.0, asc - 140.0, max(10.0, 70.0 - stem), max(10.0, 140.0 - stem_h), 40, 180, clockwise=False, steps=3)
     p_f.line_to(cx_f + stem, 0.0)
-    p_f.line_to(cx_f + stem, asc - 140.0)
-    p_f.arc_to(cx_f + stem + 70.0, asc - 140.0, 70.0, 140.0, 180, 45, clockwise=False, steps=3)
-    p_f.line_to(w_f - 30.0, asc - 10.0)
-    p_f.arc_to(cx_f + stem + 70.0, asc - 140.0, max(10.0, 70.0 - stem), max(10.0, 140.0 - stem_h), 45, 180, clockwise=True, steps=3)
-    p_f.line_to(cx_f, 0.0)
     p_f.close()
-    
     p_f_bar = Path()
-    p_f_bar.rect(40.0, x_h - stem_h, w_f - 60.0, stem_h)
-    add_glyph(GlyphSpec('f', 0x0066, w_f, 40.0, [p_f, p_f_bar]))
+    p_f_bar.rect(30.0, x_h - stem_h, w_f - 40.0, stem_h)
+    add_glyph(GlyphSpec('f', 0x0066, w_f, 30.0, [p_f, p_f_bar]))
 
-    # --- g (Modern single-story circular bowl + descending hook) ---
+    # --- g ---
     w_g = 600.0 + stem * 0.4
-    rsb_g = w_g - 60.0
-    cx_g = (rsb_g - stem + 50.0) / 2.0
+    rsb_g = w_g - 50.0
+    cx_g = (rsb_g - stem) / 2.0 + 25.0
     cy_g = x_h / 2.0
-    rx_g = (rsb_g - stem - 50.0) / 2.0
+    rx_g = (rsb_g - stem - 10.0) / 2.0
     ry_g = (x_h + 2*ov) / 2.0
-    
     p_g_bowl = Path()
     p_g_bowl.donut(cx_g, cy_g, rx_g, ry_g, max(10.0, rx_g - stem), max(10.0, ry_g - stem_h))
-    
-    p_g_tail = Path()
-    p_g_tail.move_to(rsb_g - stem, x_h)
-    p_g_tail.line_to(rsb_g, x_h)
-    p_g_tail.line_to(rsb_g, -60.0)
-    p_g_tail.arc_to(rsb_g - 140.0, -60.0, 140.0, 140.0 - desc*0.1, 0, -160, clockwise=True, steps=4)
-    p_g_tail.line_to(w_g - 260.0, -190.0)
-    p_g_tail.arc_to(rsb_g - 140.0, -60.0, max(10.0, 140.0 - stem), max(10.0, 140.0 - desc*0.1 - stem_h), -160, 0, clockwise=False, steps=4)
-    p_g_tail.close()
-    add_glyph(GlyphSpec('g', 0x0067, w_g, 50.0, [p_g_bowl, p_g_tail]))
+    p_g_desc = Path()
+    p_g_desc.move_to(rsb_g - stem, x_h)
+    p_g_desc.line_to(rsb_g, x_h)
+    p_g_desc.line_to(rsb_g, -60.0)
+    p_g_desc.arc_to(rsb_g - 110.0, -60.0, 110.0, 140.0, 0, -180, clockwise=True, steps=4)
+    p_g_desc.line_to(rsb_g - 220.0, -40.0)
+    p_g_desc.line_to(rsb_g - 220.0 + stem, -40.0)
+    p_g_desc.arc_to(rsb_g - 110.0, -60.0, max(10.0, 110.0 - stem), max(10.0, 140.0 - stem_h), -180, 0, clockwise=False, steps=4)
+    p_g_desc.line_to(rsb_g - stem, x_h)
+    p_g_desc.close()
+    add_glyph(GlyphSpec('g', 0x0067, w_g, 50.0, [p_g_bowl, p_g_desc]))
 
     # --- h ---
     w_h = 600.0 + stem * 0.4
@@ -724,56 +684,61 @@ def build_all_glyphs(weight):
     rsb_h = w_h - 60.0
     p_h_stem = Path()
     p_h_stem.rect(lsb_h, 0.0, stem, asc)
-    
     p_h_arch = Path()
-    p_h_arch.move_to(lsb_h + stem, x_h - 160.0)
-    p_h_arch.arc_to((lsb_h + stem + rsb_h)/2.0, x_h - 160.0, (rsb_h - (lsb_h + stem))/2.0, 160.0 + ov, 180, 0, clockwise=False, steps=4)
+    cx_h = (lsb_h + stem + rsb_h) / 2.0
+    cy_h = x_h - 160.0
+    rx_h = (rsb_h - (lsb_h + stem)) / 2.0
+    ry_h = 160.0 + ov
+    p_h_arch.move_to(lsb_h + stem, cy_h)
+    p_h_arch.arc_to(cx_h, cy_h, rx_h, ry_h, 180, 0, clockwise=True, steps=4)
     p_h_arch.line_to(rsb_h, 0.0)
     p_h_arch.line_to(rsb_h - stem, 0.0)
-    p_h_arch.line_to(rsb_h - stem, x_h - 160.0)
-    p_h_arch.arc_to((lsb_h + stem + rsb_h)/2.0, x_h - 160.0, max(10.0, (rsb_h - (lsb_h + stem))/2.0 - stem), max(10.0, 160.0 + ov - stem_h), 0, 180, clockwise=True, steps=4)
+    p_h_arch.line_to(rsb_h - stem, cy_h)
+    p_h_arch.arc_to(cx_h, cy_h, max(10.0, rx_h - stem), max(10.0, ry_h - stem_h), 0, 180, clockwise=False, steps=4)
     p_h_arch.close()
     add_glyph(GlyphSpec('h', 0x0068, w_h, lsb_h, [p_h_stem, p_h_arch]))
 
-    # --- i (Clean stem + Circular Dot) ---
+    # --- i ---
     w_i = 250.0 + stem * 0.8
     lsb_i = (w_i - stem) / 2.0
     p_i_stem = Path()
     p_i_stem.rect(lsb_i, 0.0, stem, x_h)
     p_i_dot = Path()
-    r_dot = max(18.0, stem * 0.6)
-    p_i_dot.circle(w_i / 2.0, 650.0, r_dot)
+    r_dot = stem * 0.52
+    p_i_dot.circle(w_i / 2.0, x_h + 100.0, r_dot)
     add_glyph(GlyphSpec('i', 0x0069, w_i, lsb_i, [p_i_stem, p_i_dot]))
 
     # --- j ---
     w_j = 270.0 + stem * 0.7
-    rsb_j = w_j - 60.0
+    rsb_j = w_j - 50.0
     p_j_stem = Path()
     p_j_stem.move_to(rsb_j - stem, x_h)
     p_j_stem.line_to(rsb_j, x_h)
     p_j_stem.line_to(rsb_j, -60.0)
-    p_j_stem.arc_to(rsb_j - 110.0, -60.0, 110.0, 140.0, 0, -180, clockwise=True, steps=4)
-    p_j_stem.line_to(rsb_j - 220.0, -40.0)
-    p_j_stem.line_to(rsb_j - 220.0 + stem, -40.0)
-    p_j_stem.arc_to(rsb_j - 110.0, -60.0, max(10.0, 110.0 - stem), max(10.0, 140.0 - stem_h), -180, 0, clockwise=False, steps=4)
+    p_j_stem.arc_to(rsb_j - 100.0, -60.0, 100.0, 140.0, 0, -180, clockwise=True, steps=4)
+    p_j_stem.line_to(rsb_j - 200.0, -40.0)
+    p_j_stem.line_to(rsb_j - 200.0 + stem, -40.0)
+    p_j_stem.arc_to(rsb_j - 100.0, -60.0, max(10.0, 100.0 - stem), max(10.0, 140.0 - stem_h), -180, 0, clockwise=False, steps=4)
+    p_j_stem.line_to(rsb_j - stem, x_h)
     p_j_stem.close()
     p_j_dot = Path()
-    p_j_dot.circle(rsb_j - stem/2.0, 650.0, r_dot)
+    p_j_dot.circle(rsb_j - stem/2.0, x_h + 100.0, r_dot)
     add_glyph(GlyphSpec('j', 0x006A, w_j, 40.0, [p_j_stem, p_j_dot]))
 
     # --- k ---
     w_k = 540.0 + stem * 0.35
     lsb_k = 60.0
+    rsb_k = w_k - 40.0
     p_k_stem = Path()
     p_k_stem.rect(lsb_k, 0.0, stem, asc)
     p_k_diag = Path()
-    p_k_diag.move_to(lsb_k + stem, 220.0)
-    p_k_diag.line_to(w_k - 70.0, x_h)
-    p_k_diag.line_to(w_k - 70.0 + stem*1.1, x_h)
-    p_k_diag.line_to(lsb_k + stem + 40.0, 160.0)
-    p_k_diag.line_to(w_k - 50.0 + stem*1.1, 0.0)
-    p_k_diag.line_to(w_k - 50.0, 0.0)
-    p_k_diag.line_to(lsb_k + stem, 110.0)
+    p_k_diag.move_to(lsb_k + stem, 160.0)
+    p_k_diag.line_to(rsb_k - stem*0.9, x_h)
+    p_k_diag.line_to(rsb_K, x_h) if 'rsb_K' in locals() else p_k_diag.line_to(rsb_k, x_h)
+    p_k_diag.line_to(lsb_k + stem*1.6, 230.0)
+    p_k_diag.line_to(rsb_k, 0.0)
+    p_k_diag.line_to(rsb_k - stem*1.1, 0.0)
+    p_k_diag.line_to(lsb_k + stem, 180.0)
     p_k_diag.close()
     add_glyph(GlyphSpec('k', 0x006B, w_k, lsb_k, [p_k_stem, p_k_diag]))
 
@@ -785,35 +750,35 @@ def build_all_glyphs(weight):
     add_glyph(GlyphSpec('l', 0x006C, w_l, lsb_l, [p_l]))
 
     # --- m ---
-    w_m = 920.0 + stem * 1.0
+    w_m = 900.0 + stem * 0.6
     lsb_m = 60.0
     col_w = (w_m - 2*lsb_m) / 2.0
     p_m_stem = Path()
     p_m_stem.rect(lsb_m, 0.0, stem, x_h)
     
-    rx_m_in = max(10.0, (col_w - 2*stem) / 2.0)
-    ry_m_in = max(10.0, 150.0 + ov - stem_h)
+    p_m1 = Path()
     cx_m1 = lsb_m + stem + (col_w - stem)/2.0
+    cy_m = x_h - 150.0
+    rx_m = (col_w - stem)/2.0
+    ry_m = 150.0 + ov
+    p_m1.move_to(lsb_m + stem, cy_m)
+    p_m1.arc_to(cx_m1, cy_m, rx_m, ry_m, 180, 0, clockwise=True, steps=4)
+    p_m1.line_to(lsb_m + col_w, 0.0)
+    p_m1.line_to(lsb_m + col_w - stem, 0.0)
+    p_m1.line_to(lsb_m + col_w - stem, cy_m)
+    p_m1.arc_to(cx_m1, cy_m, max(10.0, rx_m - stem), max(10.0, ry_m - stem_h), 0, 180, clockwise=False, steps=4)
+    p_m1.close()
     
-    p_m_arch1 = Path()
-    p_m_arch1.move_to(lsb_m + stem, x_h - 150.0)
-    p_m_arch1.arc_to(cx_m1, x_h - 150.0, (col_w - stem)/2.0, 150.0 + ov, 180, 0, clockwise=False, steps=4)
-    p_m_arch1.line_to(lsb_m + col_w, 0.0)
-    p_m_arch1.line_to(lsb_m + col_w - stem, 0.0)
-    p_m_arch1.line_to(lsb_m + col_w - stem, x_h - 150.0)
-    p_m_arch1.arc_to(cx_m1, x_h - 150.0, rx_m_in, ry_m_in, 0, 180, clockwise=True, steps=4)
-    p_m_arch1.close()
-    
+    p_m2 = Path()
     cx_m2 = lsb_m + col_w + (col_w - stem)/2.0
-    p_m_arch2 = Path()
-    p_m_arch2.move_to(lsb_m + col_w, x_h - 150.0)
-    p_m_arch2.arc_to(cx_m2, x_h - 150.0, (col_w - stem)/2.0, 150.0 + ov, 180, 0, clockwise=False, steps=4)
-    p_m_arch2.line_to(lsb_m + col_w*2.0, 0.0)
-    p_m_arch2.line_to(lsb_m + col_w*2.0 - stem, 0.0)
-    p_m_arch2.line_to(lsb_m + col_w*2.0 - stem, x_h - 150.0)
-    p_m_arch2.arc_to(cx_m2, x_h - 150.0, rx_m_in, ry_m_in, 0, 180, clockwise=True, steps=4)
-    p_m_arch2.close()
-    add_glyph(GlyphSpec('m', 0x006D, w_m, lsb_m, [p_m_stem, p_m_arch1, p_m_arch2]))
+    p_m2.move_to(lsb_m + col_w, cy_m)
+    p_m2.arc_to(cx_m2, cy_m, rx_m, ry_m, 180, 0, clockwise=True, steps=4)
+    p_m2.line_to(w_m - lsb_m, 0.0)
+    p_m2.line_to(w_m - lsb_m - stem, 0.0)
+    p_m2.line_to(w_m - lsb_m - stem, cy_m)
+    p_m2.arc_to(cx_m2, cy_m, max(10.0, rx_m - stem), max(10.0, ry_m - stem_h), 0, 180, clockwise=False, steps=4)
+    p_m2.close()
+    add_glyph(GlyphSpec('m', 0x006D, w_m, lsb_m, [p_m_stem, p_m1, p_m2]))
 
     # --- n ---
     w_n = 600.0 + stem * 0.4
@@ -822,20 +787,24 @@ def build_all_glyphs(weight):
     p_n_stem = Path()
     p_n_stem.rect(lsb_n, 0.0, stem, x_h)
     p_n_arch = Path()
-    p_n_arch.move_to(lsb_n + stem, x_h - 160.0)
-    p_n_arch.arc_to((lsb_n + stem + rsb_n)/2.0, x_h - 160.0, (rsb_n - (lsb_n + stem))/2.0, 160.0 + ov, 180, 0, clockwise=False, steps=4)
+    cx_n = (lsb_n + stem + rsb_n) / 2.0
+    cy_n = x_h - 160.0
+    rx_n = (rsb_n - (lsb_n + stem)) / 2.0
+    ry_n = 160.0 + ov
+    p_n_arch.move_to(lsb_n + stem, cy_n)
+    p_n_arch.arc_to(cx_n, cy_n, rx_n, ry_n, 180, 0, clockwise=True, steps=4)
     p_n_arch.line_to(rsb_n, 0.0)
     p_n_arch.line_to(rsb_n - stem, 0.0)
-    p_n_arch.line_to(rsb_n - stem, x_h - 160.0)
-    p_n_arch.arc_to((lsb_n + stem + rsb_n)/2.0, x_h - 160.0, max(10.0, (rsb_n - (lsb_n + stem))/2.0 - stem), max(10.0, 160.0 + ov - stem_h), 0, 180, clockwise=True, steps=4)
+    p_n_arch.line_to(rsb_n - stem, cy_n)
+    p_n_arch.arc_to(cx_n, cy_n, max(10.0, rx_n - stem), max(10.0, ry_n - stem_h), 0, 180, clockwise=False, steps=4)
     p_n_arch.close()
     add_glyph(GlyphSpec('n', 0x006E, w_n, lsb_n, [p_n_stem, p_n_arch]))
 
-    # --- o (Geometric Circle) ---
+    # --- o ---
     w_o = 600.0 + stem * 0.4
     cx_o = w_o / 2.0
     cy_o = x_h / 2.0
-    rx_o = (w_o - 80.0) / 2.0
+    rx_o = (w_o - 70.0) / 2.0
     ry_o = (x_h + 2*ov) / 2.0
     p_o = Path()
     p_o.donut(cx_o, cy_o, rx_o, ry_o, max(10.0, rx_o - stem), max(10.0, ry_o - stem_h))
@@ -846,11 +815,11 @@ def build_all_glyphs(weight):
     lsb_p = 60.0
     p_p_stem = Path()
     p_p_stem.rect(lsb_p, desc, stem, x_h - desc)
-    p_p_bowl = Path()
-    cx_p = (w_p + lsb_p + stem) / 2.0 - 20.0
+    cx_p = (w_p + lsb_p + stem) / 2.0 - 15.0
     cy_p = x_h / 2.0
-    rx_p = (w_p - lsb_p - stem - 30.0) / 2.0
+    rx_p = (w_p - (lsb_p + stem) - 10.0) / 2.0
     ry_p = (x_h + 2*ov) / 2.0
+    p_p_bowl = Path()
     p_p_bowl.donut(cx_p, cy_p, rx_p, ry_p, max(10.0, rx_p - stem), max(10.0, ry_p - stem_h))
     add_glyph(GlyphSpec('p', 0x0070, w_p, lsb_p, [p_p_stem, p_p_bowl]))
 
@@ -859,76 +828,94 @@ def build_all_glyphs(weight):
     rsb_q = w_q - 60.0
     p_q_stem = Path()
     p_q_stem.rect(rsb_q - stem, desc, stem, x_h - desc)
-    p_q_bowl = Path()
     cx_q = (rsb_q - stem + 50.0) / 2.0
     cy_q = x_h / 2.0
-    rx_q = (rsb_q - stem - 50.0) / 2.0
+    rx_q = (rsb_q - stem - 30.0) / 2.0
     ry_q = (x_h + 2*ov) / 2.0
+    p_q_bowl = Path()
     p_q_bowl.donut(cx_q, cy_q, rx_q, ry_q, max(10.0, rx_q - stem), max(10.0, ry_q - stem_h))
     add_glyph(GlyphSpec('q', 0x0071, w_q, 50.0, [p_q_bowl, p_q_stem]))
 
     # --- r ---
-    w_r = 400.0 + stem * 0.3
+    w_r = 400.0 + stem * 0.35
     lsb_r = 60.0
+    rsb_r = w_r - 30.0
     p_r_stem = Path()
     p_r_stem.rect(lsb_r, 0.0, stem, x_h)
-    p_r_arch = Path()
-    p_r_arch.move_to(lsb_r + stem, x_h - 150.0)
-    p_r_arch.arc_to(lsb_r + stem + 90.0, x_h - 150.0, 90.0, 150.0 + ov, 180, 45, clockwise=False, steps=3)
-    p_r_arch.line_to(w_r - 20.0, x_h - 60.0)
-    p_r_arch.arc_to(lsb_r + stem + 90.0, x_h - 150.0, max(10.0, 90.0 - stem), max(10.0, 150.0 + ov - stem_h), 45, 180, clockwise=True, steps=3)
-    p_r_arch.close()
-    add_glyph(GlyphSpec('r', 0x0072, w_r, lsb_r, [p_r_stem, p_r_arch]))
+    p_r_hook = Path()
+    cx_r = (lsb_r + stem + rsb_r) / 2.0
+    cy_r = x_h - 150.0
+    rx_r = (rsb_r - (lsb_r + stem)) / 2.0
+    ry_r = 150.0 + ov
+    rx_r_in = max(10.0, rx_r - stem)
+    ry_r_in = max(10.0, ry_r - stem_h)
+    a_term_r = 20.0
+    p_r_hook.move_to(lsb_r + stem, cy_r)
+    p_r_hook.arc_to(cx_r, cy_r, rx_r, ry_r, 180, a_term_r, clockwise=True, steps=3)
+    p_r_hook.line_to(cx_r + rx_r_in * math.cos(math.radians(a_term_r)), cy_r + ry_r_in * math.sin(math.radians(a_term_r)))
+    p_r_hook.arc_to(cx_r, cy_r, rx_r_in, ry_r_in, a_term_r, 180, clockwise=False, steps=3)
+    p_r_hook.close()
+    add_glyph(GlyphSpec('r', 0x0072, w_r, lsb_r, [p_r_stem, p_r_hook]))
 
     # --- s ---
-    w_s = 500.0 + stem * 0.3
-    lsb_s = 60.0
-    rsb_s = w_s - 60.0
+    w_s = 520.0 + stem * 0.3
+    lsb_s = 50.0
+    rsb_s = w_s - 50.0
     cx_s = w_s / 2.0
     p_s = Path()
-    p_s.move_to(rsb_s - 20.0, x_h - 100.0)
-    p_s.arc_to(cx_s, x_h - 130.0, (w_s - 120.0)/2.0, 130.0 + ov, 30, 180, clockwise=False, steps=4)
-    p_s.arc_to(cx_s, 130.0, (w_s - 120.0)/2.0, 130.0 + ov, 0, -150, clockwise=True, steps=4)
+    p_s.move_to(rsb_s - 20.0, x_h - 120.0)
+    p_s.arc_to(cx_s, x_h - 140.0, (w_s - 100.0)/2.0, 140.0 + ov, 35, 180, clockwise=False, steps=4)
+    p_s.arc_to(cx_s, 140.0, (w_s - 100.0)/2.0, 140.0 + ov, 0, -145, clockwise=True, steps=4)
     p_s.line_to(lsb_s + 20.0, 100.0)
-    p_s.arc_to(cx_s, 130.0, max(10.0, (w_s - 120.0)/2.0 - stem), max(10.0, 130.0 + ov - stem_h), -150, 0, clockwise=False, steps=4)
-    p_s.arc_to(cx_s, x_h - 130.0, max(10.0, (w_s - 120.0)/2.0 - stem), max(10.0, 130.0 + ov - stem_h), 180, 30, clockwise=True, steps=4)
+    p_s.arc_to(cx_s, 140.0, max(10.0, (w_s - 100.0)/2.0 - stem), max(10.0, 140.0 + ov - stem_h), -145, 0, clockwise=False, steps=4)
+    p_s.arc_to(cx_s, x_h - 140.0, max(10.0, (w_s - 100.0)/2.0 - stem), max(10.0, 140.0 + ov - stem_h), 180, 35, clockwise=True, steps=4)
     p_s.close()
     add_glyph(GlyphSpec('s', 0x0073, w_s, lsb_s, [p_s]))
 
-    # --- t (Straight stem with curved bottom hook, crossbar at x-height) ---
+    # --- t ---
     w_t = 360.0 + stem * 0.3
-    cx_t = 110.0
+    cx_t = 80.0
+    x_bl = 20.0
+    x_br = w_t - 30.0
+    y_tb = x_h
+    y_bb = x_h - stem_h
     p_t = Path()
-    p_t.move_to(cx_t, 650.0)
-    p_t.line_to(cx_t + stem, 650.0)
-    p_t.line_to(cx_t + stem, 120.0)
-    p_t.arc_to(cx_t + stem + 70.0, 120.0, 70.0, 120.0 + ov, 180, 270, clockwise=True, steps=2)
-    p_t.line_to(w_t - 30.0, 0.0)
-    p_t.line_to(w_t - 30.0, stem_h)
-    p_t.line_to(cx_t + stem + 70.0, stem_h)
-    p_t.arc_to(cx_t + stem + 70.0, 120.0, max(10.0, 70.0 - stem), max(10.0, 120.0 + ov - stem_h), 270, 180, clockwise=False, steps=2)
-    p_t.line_to(cx_t, 650.0)
+    p_t.move_to(cx_t, 660.0)
+    p_t.line_to(cx_t, y_tb)
+    p_t.line_to(x_bl, y_tb)
+    p_t.line_to(x_bl, y_bb)
+    p_t.line_to(cx_t, y_bb)
+    p_t.line_to(cx_t, 100.0)
+    p_t.arc_to(cx_t + 70.0, 100.0, 70.0, 100.0 + ov, 180, 270, clockwise=False, steps=3)
+    p_t.line_to(w_t - 20.0, -ov)
+    p_t.line_to(w_t - 20.0, stem_h)
+    p_t.line_to(cx_t + 70.0, stem_h)
+    p_t.arc_to(cx_t + 70.0, 100.0, max(10.0, 70.0 - stem), max(10.0, 100.0 + ov - stem_h), 270, 180, clockwise=True, steps=3)
+    p_t.line_to(cx_t + stem, y_bb)
+    p_t.line_to(x_br, y_bb)
+    p_t.line_to(x_br, y_tb)
+    p_t.line_to(cx_t + stem, y_tb)
+    p_t.line_to(cx_t + stem, 660.0)
     p_t.close()
-    
-    p_t_bar = Path()
-    p_t_bar.rect(40.0, x_h - stem_h, w_t - 60.0, stem_h)
-    add_glyph(GlyphSpec('t', 0x0074, w_t, 40.0, [p_t, p_t_bar]))
+    add_glyph(GlyphSpec('t', 0x0074, w_t, 20.0, [p_t]))
 
     # --- u ---
     w_u = 600.0 + stem * 0.4
     lsb_u = 60.0
     rsb_u = w_u - 60.0
     cx_u = w_u / 2.0
+    cy_u = 160.0
+    rx_u = (rsb_u - lsb_u) / 2.0
+    ry_u = cy_u + ov
     p_u = Path()
     p_u.move_to(lsb_u, x_h)
-    p_u.line_to(lsb_u + stem, x_h)
-    p_u.line_to(lsb_u + stem, 160.0)
-    p_u.arc_to(cx_u, 160.0, max(10.0, (w_u - 120.0)/2.0 - stem), max(10.0, 160.0 + ov - stem_h), 180, 0, clockwise=True, steps=4)
-    p_u.line_to(rsb_u - stem, x_h)
+    p_u.line_to(lsb_u, cy_u)
+    p_u.arc_to(cx_u, cy_u, rx_u, ry_u, 180, 0, clockwise=False, steps=4)
     p_u.line_to(rsb_u, x_h)
-    p_u.line_to(rsb_u, 160.0)
-    p_u.arc_to(cx_u, 160.0, (w_u - 120.0)/2.0, 160.0 + ov, 0, -180, clockwise=True, steps=4)
-    p_u.line_to(lsb_u, x_h)
+    p_u.line_to(rsb_u - stem, x_h)
+    p_u.line_to(rsb_u - stem, cy_u)
+    p_u.arc_to(cx_u, cy_u, max(10.0, rx_u - stem), max(10.0, ry_u - stem_h), 0, -180, clockwise=True, steps=4)
+    p_u.line_to(lsb_u + stem, x_h)
     p_u.close()
     add_glyph(GlyphSpec('u', 0x0075, w_u, lsb_u, [p_u]))
 
@@ -939,12 +926,11 @@ def build_all_glyphs(weight):
     cx_v = w_v / 2.0
     p_v = Path()
     p_v.move_to(lsb_v, x_h)
-    p_v.line_to(lsb_v + stem*1.1, x_h)
-    p_v.line_to(cx_v, stem_h*0.8)
-    p_v.line_to(rsb_v - stem*1.1, x_h)
+    p_v.line_to(cx_v, 0.0)
     p_v.line_to(rsb_v, x_h)
-    p_v.line_to(cx_v + stem*0.3, 0.0)
-    p_v.line_to(cx_v - stem*0.3, 0.0)
+    p_v.line_to(rsb_v - stem*1.1, x_h)
+    p_v.line_to(cx_v, stem_h*1.2)
+    p_v.line_to(lsb_v + stem*1.1, x_h)
     p_v.close()
     add_glyph(GlyphSpec('v', 0x0076, w_v, lsb_v, [p_v]))
 
@@ -952,19 +938,18 @@ def build_all_glyphs(weight):
     w_w = 820.0 + stem * 0.5
     lsb_w = 30.0
     rsb_w = w_w - 30.0
+    cx_w = w_w / 2.0
     p_w = Path()
     p_w.move_to(lsb_w, x_h)
-    p_w.line_to(lsb_w + stem*0.9, x_h)
-    p_w.line_to(lsb_w + 170.0, 0.0)
-    p_w.line_to(lsb_w + 170.0 + stem*0.8, 0.0)
-    p_w.line_to(w_w / 2.0, x_h - 130.0)
-    p_w.line_to(rsb_w - 170.0 - stem*0.8, 0.0)
-    p_w.line_to(rsb_w - 170.0, 0.0)
-    p_w.line_to(rsb_w - stem*0.9, x_h)
+    p_w.line_to(lsb_w + 140.0, 0.0)
+    p_w.line_to(cx_w, x_h - 140.0)
+    p_w.line_to(rsb_w - 140.0, 0.0)
     p_w.line_to(rsb_w, x_h)
-    p_w.line_to(rsb_w - 160.0, 0.0)
-    p_w.line_to(w_w / 2.0, x_h - 180.0)
-    p_w.line_to(lsb_w + 160.0, 0.0)
+    p_w.line_to(rsb_w - stem*0.9, x_h)
+    p_w.line_to(rsb_w - 140.0, stem_h*1.5)
+    p_w.line_to(cx_w, x_h - 40.0)
+    p_w.line_to(lsb_w + 140.0, stem_h*1.5)
+    p_w.line_to(lsb_w + stem*0.9, x_h)
     p_w.close()
     add_glyph(GlyphSpec('w', 0x0077, w_w, lsb_w, [p_w]))
 
@@ -979,7 +964,7 @@ def build_all_glyphs(weight):
     p_x1.line_to(rsb_x - stem*1.1, 0.0)
     p_x1.close()
     p_x2 = Path()
-    p_x2.move_to(rsb_x - stem*1.1, x_h)
+    p_x2.move_to(rsb_X - stem*1.1, x_h) if 'rsb_X' in locals() else p_x2.move_to(rsb_x - stem*1.1, x_h)
     p_x2.line_to(rsb_x, x_h)
     p_x2.line_to(lsb_x + stem*1.1, 0.0)
     p_x2.line_to(lsb_x, 0.0)
@@ -993,19 +978,18 @@ def build_all_glyphs(weight):
     cx_y = w_y / 2.0
     p_y = Path()
     p_y.move_to(lsb_y, x_h)
-    p_y.line_to(lsb_y + stem*1.1, x_h)
-    p_y.line_to(cx_y, 160.0)
-    p_y.line_to(lsb_y + 40.0, desc + 40.0)
-    p_y.arc_to(lsb_y + 80.0, desc + 40.0, 40.0, 40.0, 180, 270, clockwise=True, steps=2)
-    p_y.line_to(cx_y, desc)
+    p_y.line_to(cx_y, 0.0)
+    p_y.line_to(lsb_y + 40.0, desc)
+    p_y.line_to(lsb_y + 40.0 + stem*1.1, desc)
     p_y.line_to(rsb_y, x_h)
     p_y.line_to(rsb_y - stem*1.1, x_h)
-    p_y.line_to(cx_y + stem*0.3, 160.0)
+    p_y.line_to(cx_y, 40.0)
+    p_y.line_to(lsb_y + stem*1.1, x_h)
     p_y.close()
     add_glyph(GlyphSpec('y', 0x0079, w_y, lsb_y, [p_y]))
 
     # --- z ---
-    w_z = 500.0 + stem * 0.3
+    w_z = 520.0 + stem * 0.3
     lsb_z = 50.0
     rsb_z = w_z - 50.0
     p_z = Path()
@@ -1022,51 +1006,47 @@ def build_all_glyphs(weight):
     p_z.close()
     add_glyph(GlyphSpec('z', 0x007A, w_z, lsb_z, [p_z]))
 
-    # -------------------------------------------------------------
-    # FIGURES 0-9 (Lining Modern Proportional)
-    # -------------------------------------------------------------
+    # =============================================================
+    # FIGURES 0-9
+    # =============================================================
 
-    # --- zero ---
+    # --- 0 ---
     w_0 = 640.0 + stem * 0.4
-    cx_0 = w_0 / 2.0
-    cy_0 = cap_h / 2.0
-    rx_0 = (w_0 - 80.0) / 2.0
-    ry_0 = (cap_h + 2*ov) / 2.0
     p_0 = Path()
-    p_0.donut(cx_0, cy_0, rx_0, ry_0, max(10.0, rx_0 - stem), max(10.0, ry_0 - stem_h))
+    p_0.donut(w_0/2.0, cap_h/2.0, (w_0-80.0)/2.0, cap_h/2.0 + ov, max(10.0, (w_0-80.0)/2.0 - stem), max(10.0, cap_h/2.0 + ov - stem_h))
     add_glyph(GlyphSpec('zero', 0x0030, w_0, 40.0, [p_0]))
 
-    # --- one ---
+    # --- 1 ---
     w_1 = 440.0 + stem * 0.3
-    cx_1 = w_1 / 2.0 + 20.0
+    cx_1 = w_1 / 2.0 + 10.0
     p_1 = Path()
     p_1.move_to(cx_1 - stem/2.0, 0.0)
     p_1.line_to(cx_1 + stem/2.0, 0.0)
     p_1.line_to(cx_1 + stem/2.0, cap_h)
-    p_1.line_to(cx_1 - 130.0, cap_h - 110.0)
-    p_1.line_to(cx_1 - 130.0 + stem*0.8, cap_h - 110.0)
+    p_1.line_to(cx_1 - 120.0, cap_h - 110.0)
+    p_1.line_to(cx_1 - 120.0 + stem*0.8, cap_h - 110.0)
     p_1.line_to(cx_1 - stem/2.0, cap_h - 40.0)
     p_1.close()
     add_glyph(GlyphSpec('one', 0x0031, w_1, 60.0, [p_1]))
 
-    # --- two ---
+    # --- 2 ---
     w_2 = 580.0 + stem * 0.35
     lsb_2 = 60.0
     rsb_2 = w_2 - 60.0
     p_2 = Path()
     p_2.move_to(lsb_2 + 20.0, cap_h - 140.0)
-    p_2.arc_to(w_2 / 2.0, cap_h - 170.0, (w_2 - 120.0)/2.0, 170.0 + ov, 150, 0, clockwise=False, steps=4)
+    p_2.arc_to(w_2 / 2.0, cap_h - 170.0, (w_2 - 120.0)/2.0, 170.0 + ov, 150, 0, clockwise=True, steps=4)
     p_2.line_to(lsb_2, stem_h)
     p_2.line_to(rsb_2, stem_h)
     p_2.line_to(rsb_2, 0.0)
     p_2.line_to(lsb_2, 0.0)
     p_2.line_to(lsb_2, stem_h*1.2)
     p_2.line_to(rsb_2 - stem*1.3, cap_h - 220.0)
-    p_2.arc_to(w_2 / 2.0, cap_h - 170.0, max(10.0, (w_2 - 120.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), 0, 150, clockwise=True, steps=4)
+    p_2.arc_to(w_2 / 2.0, cap_h - 170.0, max(10.0, (w_2 - 120.0)/2.0 - stem), max(10.0, 170.0 + ov - stem_h), 0, 150, clockwise=False, steps=4)
     p_2.close()
     add_glyph(GlyphSpec('two', 0x0032, w_2, lsb_2, [p_2]))
 
-    # --- three ---
+    # --- 3 ---
     w_3 = 580.0 + stem * 0.35
     lsb_3 = 60.0
     rsb_3 = w_3 - 60.0
@@ -1074,15 +1054,15 @@ def build_all_glyphs(weight):
     y_m3 = 360.0
     p_3 = Path()
     p_3.move_to(lsb_3 + 30.0, cap_h - 120.0)
-    p_3.arc_to(cx_3, (cap_h + y_m3)/2.0, (w_3 - 120.0)/2.0, (cap_h - y_m3)/2.0 + ov, 140, -40, clockwise=False, steps=4)
-    p_3.arc_to(cx_3, y_m3/2.0, (w_3 - 120.0)/2.0, y_m3/2.0 + ov, 40, -140, clockwise=False, steps=4)
+    p_3.arc_to(cx_3, (cap_h + y_m3)/2.0, (w_3 - 120.0)/2.0, (cap_h - y_m3)/2.0 + ov, 140, -40, clockwise=True, steps=4)
+    p_3.arc_to(cx_3, y_m3/2.0, (w_3 - 120.0)/2.0, y_m3/2.0 + ov, 40, -140, clockwise=True, steps=4)
     p_3.line_to(lsb_3 + 30.0, 100.0)
-    p_3.arc_to(cx_3, y_m3/2.0, max(10.0, (w_3 - 120.0)/2.0 - stem), max(10.0, y_m3/2.0 + ov - stem_h), -140, 40, clockwise=True, steps=4)
-    p_3.arc_to(cx_3, (cap_h + y_m3)/2.0, max(10.0, (w_3 - 120.0)/2.0 - stem), max(10.0, (cap_h - y_m3)/2.0 + ov - stem_h), -40, 140, clockwise=True, steps=4)
+    p_3.arc_to(cx_3, y_m3/2.0, max(10.0, (w_3 - 120.0)/2.0 - stem), max(10.0, y_m3/2.0 + ov - stem_h), -140, 40, clockwise=False, steps=4)
+    p_3.arc_to(cx_3, (cap_h + y_m3)/2.0, max(10.0, (w_3 - 120.0)/2.0 - stem), max(10.0, (cap_h - y_m3)/2.0 + ov - stem_h), -40, 140, clockwise=False, steps=4)
     p_3.close()
     add_glyph(GlyphSpec('three', 0x0033, w_3, lsb_3, [p_3]))
 
-    # --- four ---
+    # --- 4 ---
     w_4 = 600.0 + stem * 0.35
     lsb_4 = 50.0
     rsb_4 = w_4 - 50.0
@@ -1099,7 +1079,6 @@ def build_all_glyphs(weight):
     p_4_frame.line_to(lsb_4, 200.0)
     p_4_frame.line_to(rsb_4 - 100.0 - stem, 200.0)
     p_4_frame.close()
-    
     p_4_in = Path()
     p_4_in.move_to(lsb_4 + stem*1.4, 200.0 + stem_h)
     p_4_in.line_to(rsb_4 - 100.0 - stem, cap_h - stem*1.6)
@@ -1107,7 +1086,7 @@ def build_all_glyphs(weight):
     p_4_in.close()
     add_glyph(GlyphSpec('four', 0x0034, w_4, lsb_4, [p_4_frame, p_4_in]))
 
-    # --- five ---
+    # --- 5 ---
     w_5 = 580.0 + stem * 0.35
     lsb_5 = 60.0
     rsb_5 = w_5 - 60.0
@@ -1125,7 +1104,7 @@ def build_all_glyphs(weight):
     p_5.close()
     add_glyph(GlyphSpec('five', 0x0035, w_5, lsb_5, [p_5]))
 
-    # --- six ---
+    # --- 6 ---
     w_6 = 620.0 + stem * 0.4
     cx_6 = w_6 / 2.0
     cy_6 = 220.0
@@ -1135,42 +1114,37 @@ def build_all_glyphs(weight):
     p_6_bowl.donut(cx_6, cy_6, rx_6, ry_6, max(10.0, rx_6 - stem), max(10.0, ry_6 - stem_h))
     p_6_spine = Path()
     p_6_spine.move_to(cx_6 - rx_6 + stem, 220.0)
-    p_6_spine.arc_to(cx_6, 460.0, rx_6, 240.0 + ov, 180, 45, clockwise=False, steps=4)
+    p_6_spine.arc_to(cx_6, 460.0, rx_6, 240.0 + ov, 180, 45, clockwise=True, steps=4)
     p_6_spine.line_to(w_6 - 60.0, cap_h - 40.0)
-    p_6_spine.arc_to(cx_6, 460.0, max(10.0, rx_6 - stem), max(10.0, 240.0 + ov - stem_h), 45, 180, clockwise=True, steps=4)
+    p_6_spine.arc_to(cx_6, 460.0, max(10.0, rx_6 - stem), max(10.0, 240.0 + ov - stem_h), 45, 180, clockwise=False, steps=4)
     p_6_spine.close()
     add_glyph(GlyphSpec('six', 0x0036, w_6, 40.0, [p_6_bowl, p_6_spine]))
 
-    # --- seven ---
+    # --- 7 ---
     w_7 = 580.0 + stem * 0.35
     lsb_7 = 60.0
     rsb_7 = w_7 - 60.0
     p_7 = Path()
     p_7.move_to(lsb_7, cap_h)
     p_7.line_to(rsb_7, cap_h)
-    p_7.line_to(lsb_7 + 100.0, 0.0)
-    p_7.line_to(lsb_7 + 100.0 - stem*1.1, 0.0)
-    p_7.line_to(rsb_7 - stem*1.2, cap_h - stem_h)
+    p_7.line_to(rsb_7 - 180.0, 0.0)
+    p_7.line_to(rsb_7 - 180.0 - stem*1.1, 0.0)
+    p_7.line_to(rsb_7 - stem*1.1, cap_h - stem_h)
     p_7.line_to(lsb_7, cap_h - stem_h)
     p_7.close()
     add_glyph(GlyphSpec('seven', 0x0037, w_7, lsb_7, [p_7]))
 
-    # --- eight ---
-    w_8 = 600.0 + stem * 0.4
+    # --- 8 ---
+    w_8 = 600.0 + stem * 0.35
     cx_8 = w_8 / 2.0
-    cy_8_bot = 200.0
-    cy_8_top = cap_h - 180.0
-    rx_8_bot = (w_8 - 80.0) / 2.0
-    ry_8_bot = (400.0 + 2*ov) / 2.0
-    rx_8_top = rx_8_bot * 0.90
-    ry_8_top = (360.0 + 2*ov) / 2.0
-    p_8_bot = Path()
-    p_8_bot.donut(cx_8, cy_8_bot, rx_8_bot, ry_8_bot, max(10.0, rx_8_bot - stem), max(10.0, ry_8_bot - stem_h))
+    y_m8 = 360.0
     p_8_top = Path()
-    p_8_top.donut(cx_8, cy_8_top, rx_8_top, ry_8_top, max(10.0, rx_8_top - stem), max(10.0, ry_8_top - stem_h))
-    add_glyph(GlyphSpec('eight', 0x0038, w_8, 40.0, [p_8_bot, p_8_top]))
+    p_8_top.donut(cx_8, (cap_h + y_m8)/2.0, (w_8 - 140.0)/2.0, (cap_h - y_m8)/2.0 + ov, max(10.0, (w_8 - 140.0)/2.0 - stem), max(10.0, (cap_h - y_m8)/2.0 + ov - stem_h))
+    p_8_bot = Path()
+    p_8_bot.donut(cx_8, y_m8/2.0, (w_8 - 100.0)/2.0, y_m8/2.0 + ov, max(10.0, (w_8 - 100.0)/2.0 - stem), max(10.0, y_m8/2.0 + ov - stem_h))
+    add_glyph(GlyphSpec('eight', 0x0038, w_8, 50.0, [p_8_top, p_8_bot]))
 
-    # --- nine ---
+    # --- 9 ---
     w_9 = 620.0 + stem * 0.4
     cx_9 = w_9 / 2.0
     cy_9 = cap_h - 220.0
@@ -1180,19 +1154,19 @@ def build_all_glyphs(weight):
     p_9_bowl.donut(cx_9, cy_9, rx_9, ry_9, max(10.0, rx_9 - stem), max(10.0, ry_9 - stem_h))
     p_9_spine = Path()
     p_9_spine.move_to(cx_9 + rx_9 - stem, cy_9)
-    p_9_spine.arc_to(cx_9, 240.0, rx_9, 240.0 + ov, 0, -135, clockwise=True, steps=4)
+    p_9_spine.arc_to(cx_9, cap_h - 460.0, rx_9, 240.0 + ov, 0, -135, clockwise=True, steps=4)
     p_9_spine.line_to(60.0, 40.0)
-    p_9_spine.arc_to(cx_9, 240.0, max(10.0, rx_9 - stem), max(10.0, 240.0 + ov - stem_h), -135, 0, clockwise=False, steps=4)
+    p_9_spine.arc_to(cx_9, cap_h - 460.0, max(10.0, rx_9 - stem), max(10.0, 240.0 + ov - stem_h), -135, 0, clockwise=False, steps=4)
     p_9_spine.close()
     add_glyph(GlyphSpec('nine', 0x0039, w_9, 40.0, [p_9_bowl, p_9_spine]))
 
-    # -------------------------------------------------------------
+    # =============================================================
     # PUNCTUATION & SYMBOLS
-    # -------------------------------------------------------------
+    # =============================================================
 
-    # --- period (Clean Circular Dot) ---
+    # --- period ---
     w_period = 260.0 + stem * 0.4
-    r_dot_base = max(20.0, stem * 0.6)
+    r_dot_base = max(18.0, stem * 0.52)
     p_period = Path()
     p_period.circle(w_period / 2.0, r_dot_base, r_dot_base)
     add_glyph(GlyphSpec('period', 0x002E, w_period, w_period/2.0 - r_dot_base, [p_period]))
@@ -1249,11 +1223,11 @@ def build_all_glyphs(weight):
     cx_q = w_q / 2.0
     p_q_hook = Path()
     p_q_hook.move_to(cx_q - 130.0, cap_h - 130.0)
-    p_q_hook.arc_to(cx_q, cap_h - 170.0, 140.0, 170.0 + ov, 150, 0, clockwise=False, steps=4)
+    p_q_hook.arc_to(cx_q, cap_h - 170.0, 140.0, 170.0 + ov, 150, 0, clockwise=True, steps=4)
     p_q_hook.line_to(cx_q + stem/2.0, 200.0)
     p_q_hook.line_to(cx_q - stem/2.0, 200.0)
     p_q_hook.line_to(cx_q - stem/2.0, cap_h - 220.0)
-    p_q_hook.arc_to(cx_q, cap_h - 170.0, max(10.0, 140.0 - stem), max(10.0, 170.0 + ov - stem_h), 0, 150, clockwise=True, steps=4)
+    p_q_hook.arc_to(cx_q, cap_h - 170.0, max(10.0, 140.0 - stem), max(10.0, 170.0 + ov - stem_h), 0, 150, clockwise=False, steps=4)
     p_q_hook.close()
     p_q_dot = Path()
     p_q_dot.circle(cx_q, r_dot_base, r_dot_base)
@@ -1546,7 +1520,6 @@ def build_all_glyphs(weight):
     p_rup_stem = Path()
     p_rup_stem.rect(lsb_rup + 40.0, 260.0, stem, cap_h - 260.0)
     
-    # Upper loop
     p_rup_loop = Path()
     p_rup_loop.move_to(lsb_rup + 40.0 + stem, cap_h - stem_h*2.5)
     p_rup_loop.arc_to(lsb_rup + 40.0 + 130.0, 420.0, 130.0, 100.0, 90, -90, clockwise=True, steps=4)
@@ -1556,7 +1529,6 @@ def build_all_glyphs(weight):
     p_rup_loop.arc_to(lsb_rup + 40.0 + 130.0, 420.0, max(10.0, 130.0 - stem), max(10.0, 100.0 - stem_h), -90, 90, clockwise=False, steps=4)
     p_rup_loop.close()
     
-    # Diagonal leg down to baseline
     p_rup_leg = Path()
     p_rup_leg.move_to(lsb_rup + 120.0, 320.0)
     p_rup_leg.line_to(rsb_rup, 0.0)
@@ -1567,18 +1539,17 @@ def build_all_glyphs(weight):
 
     # --- euro (€) ---
     w_eur = 720.0 + stem * 0.4
-    p_eur_c = Path()
-    # C arc
     cx_eur = w_eur/2.0 + 20.0
     cy_eur = cap_h/2.0
     rx_eur = (w_eur - 100.0)/2.0
     ry_eur = (cap_h + 2*ov)/2.0
-    x_eur_start = cx_eur + rx_eur * math.cos(math.radians(45))
-    y_eur_start = cy_eur + ry_eur * math.sin(math.radians(45))
-    p_eur_c.move_to(x_eur_start, y_eur_start)
-    p_eur_c.arc_to(cx_eur, cy_eur, rx_eur, ry_eur, 45, 315, clockwise=True, steps=6)
-    p_eur_c.line_to(cx_eur + (rx_eur - stem)*math.cos(math.radians(315)), cy_eur + (ry_eur - stem_h)*math.sin(math.radians(315)))
-    p_eur_c.arc_to(cx_eur, cy_eur, rx_eur - stem, ry_eur - stem_h, 315, 45, clockwise=False, steps=6)
+    a_top_eur = 45.0
+    a_bot_eur = 315.0
+    p_eur_c = Path()
+    p_eur_c.move_to(cx_eur + rx_eur * math.cos(math.radians(a_top_eur)), cy_eur + ry_eur * math.sin(math.radians(a_top_eur)))
+    p_eur_c.arc_to(cx_eur, cy_eur, rx_eur, ry_eur, a_top_eur, a_bot_eur, clockwise=False, steps=6)
+    p_eur_c.line_to(cx_eur + (rx_eur - stem)*math.cos(math.radians(a_bot_eur)), cy_eur + (ry_eur - stem_h)*math.sin(math.radians(a_bot_eur)))
+    p_eur_c.arc_to(cx_eur, cy_eur, rx_eur - stem, ry_eur - stem_h, a_bot_eur, a_top_eur, clockwise=True, steps=6)
     p_eur_c.close()
     p_eur_b1 = Path()
     p_eur_b1.rect(50.0, 390.0 - stem_h/2.0, w_eur*0.6, stem_h)
@@ -1588,7 +1559,6 @@ def build_all_glyphs(weight):
 
     # --- dollar ($) ---
     w_dol = 600.0 + stem * 0.3
-    # S curve + vertical bar
     p_dol_s = Path()
     cx_dol = w_dol / 2.0
     p_dol_s.move_to(w_dol - 90.0, cap_h - 130.0)
@@ -1683,8 +1653,6 @@ def build_all_glyphs(weight):
     # -------------------------------------------------------------
     # DIACRITICS / ACCENTS & ACCENTED CHARACTERS
     # -------------------------------------------------------------
-    
-    # Helper to generate an accent path
     def make_accent(acc_type, cx, y_base):
         p = Path()
         if acc_type == 'acute':
@@ -1720,7 +1688,6 @@ def build_all_glyphs(weight):
             p.donut(cx, y_base + 60.0, r, r, max(8.0, r - stem*0.7), max(8.0, r - stem_h*0.7))
         return [p]
 
-    # Add accented latin letters by combining base glyph paths with accent paths
     accent_defs = [
         # Uppercase
         ('Agrave', 0x00C0, 'A', 'grave', cap_h + 20.0),
