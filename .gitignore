@@ -1,0 +1,11 @@
+# Python virtual environment & cache
+.venv/
+__pycache__/
+*.py[cod]
+.masters_build/
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
